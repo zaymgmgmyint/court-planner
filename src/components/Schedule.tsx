@@ -44,6 +44,19 @@ function formatDurationMinutes(totalMinutes: number): string {
 }
 
 export default function Schedule({ schedule }: Props) {
+  // Compute whether the rendered date is "today" (local) and current minute from start of view
+  const isToday = useMemo(() => {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    return schedule.date === todayIso;
+  }, [schedule.date]);
+
+  const nowOffsetMin = useMemo(() => {
+    const now = new Date();
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    const startMin = timeToMinutes(HOURS[0]);
+    return Math.max(0, minutes - startMin);
+  }, []);
+
   const courts = useMemo(() => [
     { id: 1 as const, name: "Court 1" },
     { id: 2 as const, name: "Court 2" },
@@ -81,6 +94,13 @@ export default function Schedule({ schedule }: Props) {
                 {HOURS.map((h) => (
                   <div key={h} className="h-16 border-l border-b border-white/5 overflow-hidden" />
                 ))}
+                {/* Past time dim overlay for today */}
+                {isToday && (
+                  <div
+                    className="absolute left-0 right-0 bg-white/5 pointer-events-none"
+                    style={{ top: 0, height: Math.min(nowOffsetMin, (timeToMinutes(HOURS[HOURS.length - 1]) - timeToMinutes(HOURS[0])) ) / 60 * 64 }}
+                  />
+                )}
                 <div className="absolute inset-0">
                   {eventsByCourt.get(court.id)?.map((ev) => {
                     const topMin = timeToMinutes(ev.startTime) - timeToMinutes(HOURS[0]);
@@ -89,10 +109,13 @@ export default function Schedule({ schedule }: Props) {
                     const top = (topMin / 60) * 64;
                     const height = (heightMin / 60) * 64;
                     const durationText = formatDurationMinutes(timeToMinutes(ev.endTime) - timeToMinutes(ev.startTime));
+                    const eventEndAbsMin = timeToMinutes(ev.endTime);
+                    const nowAbsMin = new Date().getHours() * 60 + new Date().getMinutes();
+                    const isPastEvent = isToday && eventEndAbsMin <= nowAbsMin;
                     return (
                       <div
                         key={ev.id}
-                        className="absolute left-2 right-2 rounded-lg text-sm text-white shadow-[0_2px_10px_rgba(0,0,0,0.25)] overflow-hidden"
+                        className={"absolute left-2 right-2 rounded-lg text-sm text-white shadow-[0_2px_10px_rgba(0,0,0,0.25)] overflow-hidden " + (isPastEvent ? "opacity-50 saturate-50" : "")}
                         style={{ top, height, backgroundColor: ev.colorHex }}
                       >
                         <div className="px-3 py-2">
