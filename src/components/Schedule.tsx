@@ -56,7 +56,6 @@ export default function Schedule({ schedule }: Props) {
     const startMin = timeToMinutes(HOURS[0]);
     return Math.max(0, minutes - startMin);
   }, []);
-
   const courts = useMemo(() => [
     { id: 1 as const, name: "Court 1" },
     { id: 2 as const, name: "Court 2" },
