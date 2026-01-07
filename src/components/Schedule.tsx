@@ -81,27 +81,27 @@ export default function Schedule({ schedule }: Props) {
           onClose={() => setSelectedEvent(null)}
         />
       )}
-      <div className="rounded-xl border border-white/10 overflow-hidden bg-[#0d0f14]">
+      <div className="rounded-xl border border-border overflow-hidden bg-card transition-colors">
         <div className="grid" style={{ gridTemplateColumns: "96px 1fr 1fr 1fr" }}>
           {/* Header Row */}
-          <div className="h-12 flex items-center pl-4 text-sm text-white/60 bg-[#0f1218] border-b border-white/10">
+          <div className="h-12 flex items-center pl-4 text-sm text-muted-foreground bg-muted/50 border-b border-border">
             Time
           </div>
           {courts.map((c) => (
             <div
               key={c.id}
-              className="h-12 flex items-center px-4 text-sm font-medium text-white bg-[#0f1218] border-b border-l border-white/10"
+              className="h-12 flex items-center px-4 text-sm font-medium text-foreground bg-muted/50 border-b border-l border-border"
             >
               {c.name}
             </div>
           ))}
 
           {/* Time Column */}
-          <div className="relative border-r border-white/5">
+          <div className="relative border-r border-border">
             {HOURS.map((h) => (
               <div
                 key={h}
-                className="h-16 border-b border-white/5 text-xs text-white/60 flex items-start pt-3 pl-4"
+                className="h-16 border-b border-border/50 text-xs text-muted-foreground flex items-start pt-3 pl-4"
               >
                 {h}
               </div>
@@ -110,14 +110,14 @@ export default function Schedule({ schedule }: Props) {
 
           {/* Court Columns */}
           {courts.map((court) => (
-            <div key={court.id} className="relative border-r border-white/10 last:border-r-0">
+            <div key={court.id} className="relative border-r border-border last:border-r-0">
               {HOURS.map((h) => (
-                <div key={h} className="h-16 border-b border-white/5 overflow-hidden" />
+                <div key={h} className="h-16 border-b border-border/50 overflow-hidden" />
               ))}
               {/* Past time dim overlay for today */}
               {isToday && (
                 <div
-                  className="absolute left-0 right-0 bg-white/5 pointer-events-none"
+                  className="absolute left-0 right-0 bg-foreground/5 pointer-events-none"
                   style={{ top: 0, height: Math.min(nowOffsetMin, (timeToMinutes(HOURS[HOURS.length - 1]) - timeToMinutes(HOURS[0]))) / 60 * 64 }}
                 />
               )}
@@ -177,18 +177,18 @@ function EventDetailsModal({
 
       {/* Modal Panel */}
       <div
-        className="relative w-full max-w-sm bg-[#1a1d24] border border-white/10 shadow-2xl rounded-2xl overflow-hidden ring-1 ring-white/10"
+        className="relative w-full max-w-sm bg-popover border border-border shadow-2xl rounded-2xl overflow-hidden ring-1 ring-border/50"
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1f232b]">
-          <h3 className="text-lg font-semibold text-white">
+        <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
+          <h3 className="text-lg font-semibold text-foreground">
             Event Details
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-all"
+            className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -198,31 +198,31 @@ function EventDetailsModal({
 
         <div className="p-6 space-y-6">
           <div>
-            <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">Title</label>
-            <div className="text-lg text-white font-medium leading-normal">{event.title}</div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Title</label>
+            <div className="text-lg text-foreground font-medium leading-normal">{event.title}</div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">Start Time</label>
-              <div className="text-base text-white/90 font-mono bg-white/5 px-2 py-1 rounded inline-block">{event.startTime}</div>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Start Time</label>
+              <div className="text-base text-foreground/90 font-mono bg-muted px-2 py-1 rounded inline-block">{event.startTime}</div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">End Time</label>
-              <div className="text-base text-white/90 font-mono bg-white/5 px-2 py-1 rounded inline-block">{event.endTime}</div>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">End Time</label>
+              <div className="text-base text-foreground/90 font-mono bg-muted px-2 py-1 rounded inline-block">{event.endTime}</div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">Duration</label>
-              <div className="text-base text-white">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Duration</label>
+              <div className="text-base text-foreground">
                 {formatDurationMinutes(timeToMinutes(event.endTime) - timeToMinutes(event.startTime))}
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-1.5">Court</label>
-              <div className="text-base text-white">{event.courtName}</div>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Court</label>
+              <div className="text-base text-foreground">{event.courtName}</div>
             </div>
           </div>
 
