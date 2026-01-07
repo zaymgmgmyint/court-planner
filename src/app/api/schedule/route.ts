@@ -31,47 +31,88 @@ function pickColorFromDescription(description?: string): string {
 }
 
 async function fetchFromGCal(calendarId: string, courtId: 1 | 2 | 3, fallbackColorHex: string, date: string): Promise<CalendarEvent[]> {
-  const apiKey = process.env.GCAL_API_KEY || "AIzaSyDr-o9IKvS2grpyt7-fOCqUaX5y4Qmzo3g";
+  const apiKey = process.env.GCAL_API_KEY;
+  if (!apiKey) {
+    console.error("Missing GCAL_API_KEY");
+    return [];
+  }
   const { timeMin, timeMax } = toIsoRangeUtc(date);
   const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${apiKey}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`;
-  const res = await fetch(url, { next: { revalidate: 0 } });
-  if (!res.ok) return [];
-  const data: { items?: GCalEvent[] } = await res.json();
-  const items: GCalEvent[] = data.items || [];
-  return items.map((event: GCalEvent) => {
-    const isAllDay = !!event.start?.date;
-    const startStr = event.start?.dateTime ?? event.start?.date;
-    const endStr = event.end?.dateTime ?? event.end?.date;
-    const start = isAllDay || !startStr ? new Date(date + "T00:00:00") : new Date(startStr);
-    const end = isAllDay || !endStr ? new Date(date + "T23:59:00") : new Date(endStr);
-    const title: string = event.summary || "(No title)";
-    const color = pickColorFromDescription(event.description) || fallbackColorHex;
-    return {
-      id: event.id || `${date}-court${courtId}-${start.toISOString()}`,
-      title,
-      courtId,
-      startTime: isAllDay ? "00:00" : toHHMM(start),
-      endTime: isAllDay ? "23:59" : toHHMM(end),
-      colorHex: color || fallbackColorHex,
-    } as CalendarEvent;
-  });
+
+  try {
+    const res = await fetch(url, { next: { revalidate: 0 } });
+    if (!res.ok) {
+      console.error(`Failed to fetch calendar ${courtId}: ${res.status} ${res.statusText}`);
+      return [];
+    }
+    const data: { items?: GCalEvent[] } = await res.json();
+    const items: GCalEvent[] = data.items || [];
+    return items.map((event: GCalEvent) => {
+      const isAllDay = !!event.start?.date;
+      const startStr = event.start?.dateTime ?? event.start?.date;
+      const endStr = event.end?.dateTime ?? event.end?.date;
+      const start = isAllDay || !startStr ? new Date(date + "T00:00:00") : new Date(startStr);
+      const end = isAllDay || !endStr ? new Date(date + "T23:59:00") : new Date(endStr);
+      const title: string = event.summary || "(No title)";
+      const color = pickColorFromDescription(event.description) || fallbackColorHex;
+      return {
+        id: event.id || `${date}-court${courtId}-${start.toISOString()}`,
+        title,
+        courtId,
+        startTime: isAllDay ? "00:00" : toHHMM(start),
+        endTime: isAllDay ? "23:59" : toHHMM(end),
+        colorHex: color || fallbackColorHex,
+      } as CalendarEvent;
+    });
+  } catch (error) {
+    console.error(`Error fetching calendar ${courtId}`, error);
+    return [];
+  }
 }
+
+import { z } from "zod";
+
+const querySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const date = searchParams.get("date") || new Date().toISOString().slice(0, 10);
+
+  // Validate input
+  const parseResult = querySchema.safeParse({
+    date: searchParams.get("date") || undefined
+  });
+
+  if (!parseResult.success) {
+    return NextResponse.json({ error: "Invalid date format. Use YYYY-MM-DD" }, { status: 400 });
+  }
+
+  // Use validated date or fallback to today
+  const date = parseResult.data.date || new Date().toISOString().slice(0, 10);
   const events: CalendarEvent[] = [];
+
   try {
-    const cal1 = process.env.GCAL_CAL_ID || "618f350cbd59c61bea551925e2cb9d98c80b8057675b8680b1c73c87231ef444@group.calendar.google.com";
-    const cal2 = process.env.GCAL_CAL2_ID || "375d7745082c6185c83e1397663be44377a2b63711109912b5fc0e917552beb0@group.calendar.google.com";
-    const cal3 = process.env.GCAL_CAL3_ID || "914ee816ec93414a27b64c9f99e4930a15236abdfb118c539bdd499bb2bb5591@group.calendar.google.com";
-    const [c1, c2, c3] = await Promise.all([
-      fetchFromGCal(cal1, 1, "#c084fc", date),
-      fetchFromGCal(cal2, 2, "#6366f1", date),
-      fetchFromGCal(cal3, 3, "#c084fc", date),
-    ]);
-    events.push(...c1, ...c2, ...c3);
-  } catch {}
+    const cal1 = process.env.GCAL_CAL_ID;
+    const cal2 = process.env.GCAL_CAL2_ID;
+    const cal3 = process.env.GCAL_CAL3_ID;
+
+    if (!cal1 || !cal2 || !cal3) {
+      console.error("Missing Calendar IDs in environment variables");
+      // In production you might want to throw or return error, but for now we'll just log
+    }
+
+    // Only fetch if we have IDs
+    const promises = [];
+    if (cal1) promises.push(fetchFromGCal(cal1, 1, "#c084fc", date));
+    if (cal2) promises.push(fetchFromGCal(cal2, 2, "#6366f1", date));
+    if (cal3) promises.push(fetchFromGCal(cal3, 3, "#2ce080ff", date));
+
+    const results = await Promise.all(promises);
+    results.forEach(r => events.push(...r));
+  } catch (err) {
+    console.error("Error in schedule API handler:", err);
+  }
 
   const body: DaySchedule = { date, events };
   return NextResponse.json(body, { headers: { "Cache-Control": "no-store" } });

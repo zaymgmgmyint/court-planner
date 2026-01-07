@@ -28,7 +28,7 @@ const HOURS = [
 ];
 
 function timeToMinutes(t: string): number {
-  const [h, m] = t.split(":" ).map((v) => parseInt(v, 10));
+  const [h, m] = t.split(":").map((v) => parseInt(v, 10));
   return h * 60 + m;
 }
 
@@ -76,61 +76,63 @@ export default function Schedule({ schedule }: Props) {
       <div className="rounded-xl border border-white/10 overflow-hidden bg-[#0d0f14]">
         <div className="grid grid-cols-[96px_repeat(3,minmax(0,1fr))]">
           <Header courts={courts} />
-          <div className="col-span-4 grid grid-cols-subgrid">
-            <div className="relative">
-              {HOURS.map((h) => (
-                <div
-                  key={h}
-                  className="h-16 border-b border-white/5 text-xs text-white/60 flex items-start pt-3 pl-4"
-                >
-                  {h}
-                </div>
-              ))}
-            </div>
 
-            {courts.map((court) => (
-              <div key={court.id} className="relative">
-                {HOURS.map((h) => (
-                  <div key={h} className="h-16 border-l border-b border-white/5 overflow-hidden" />
-                ))}
-                {/* Past time dim overlay for today */}
-                {isToday && (
-                  <div
-                    className="absolute left-0 right-0 bg-white/5 pointer-events-none"
-                    style={{ top: 0, height: Math.min(nowOffsetMin, (timeToMinutes(HOURS[HOURS.length - 1]) - timeToMinutes(HOURS[0])) ) / 60 * 64 }}
-                  />
-                )}
-                <div className="absolute inset-0">
-                  {eventsByCourt.get(court.id)?.map((ev) => {
-                    const topMin = timeToMinutes(ev.startTime) - timeToMinutes(HOURS[0]);
-                    const endMin = timeToMinutes(ev.endTime) - timeToMinutes(HOURS[0]);
-                    const heightMin = Math.max(0, endMin - topMin);
-                    const top = (topMin / 60) * 64;
-                    const height = (heightMin / 60) * 64;
-                    const durationText = formatDurationMinutes(timeToMinutes(ev.endTime) - timeToMinutes(ev.startTime));
-                    const eventEndAbsMin = timeToMinutes(ev.endTime);
-                    const nowAbsMin = new Date().getHours() * 60 + new Date().getMinutes();
-                    const isPastEvent = isToday && eventEndAbsMin <= nowAbsMin;
-                    return (
-                      <div
-                        key={ev.id}
-                        className={"absolute left-2 right-2 rounded-lg text-sm text-white shadow-[0_2px_10px_rgba(0,0,0,0.25)] overflow-hidden " + (isPastEvent ? "opacity-50 saturate-50" : "")}
-                        style={{ top, height, backgroundColor: ev.colorHex }}
-                      >
-                        <div className="px-3 py-2">
-                          <div className="font-medium truncate" title={ev.title}>{ev.title}</div>
-                          <div className="text-xs opacity-90 whitespace-nowrap">
-                            {formatRange(ev.startTime, ev.endTime)}
-                            {durationText ? ` • ${durationText}` : ""}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+          {/* Time Column */}
+          <div className="relative border-r border-white/5">
+            {HOURS.map((h) => (
+              <div
+                key={h}
+                className="h-16 border-b border-white/5 text-xs text-white/60 flex items-start pt-3 pl-4"
+              >
+                {h}
               </div>
             ))}
           </div>
+
+          {/* Court Columns */}
+          {courts.map((court) => (
+            <div key={court.id} className="relative border-r border-white/10 last:border-r-0">
+              {HOURS.map((h) => (
+                <div key={h} className="h-16 border-b border-white/5 overflow-hidden" />
+              ))}
+              {/* Past time dim overlay for today */}
+              {isToday && (
+                <div
+                  className="absolute left-0 right-0 bg-white/5 pointer-events-none"
+                  style={{ top: 0, height: Math.min(nowOffsetMin, (timeToMinutes(HOURS[HOURS.length - 1]) - timeToMinutes(HOURS[0]))) / 60 * 64 }}
+                />
+              )}
+              {/* Events Layer */}
+              <div className="absolute inset-0">
+                {eventsByCourt.get(court.id)?.map((ev) => {
+                  const topMin = timeToMinutes(ev.startTime) - timeToMinutes(HOURS[0]);
+                  const endMin = timeToMinutes(ev.endTime) - timeToMinutes(HOURS[0]);
+                  const heightMin = Math.max(0, endMin - topMin);
+                  const top = (topMin / 60) * 64;
+                  const height = (heightMin / 60) * 64;
+                  const durationText = formatDurationMinutes(timeToMinutes(ev.endTime) - timeToMinutes(ev.startTime));
+                  const eventEndAbsMin = timeToMinutes(ev.endTime);
+                  const nowAbsMin = new Date().getHours() * 60 + new Date().getMinutes();
+                  const isPastEvent = isToday && eventEndAbsMin <= nowAbsMin;
+                  return (
+                    <div
+                      key={ev.id}
+                      className={"absolute left-2 right-2 rounded-lg text-sm text-white shadow-[0_2px_10px_rgba(0,0,0,0.25)] overflow-hidden " + (isPastEvent ? "opacity-50 saturate-50" : "")}
+                      style={{ top, height, backgroundColor: ev.colorHex }}
+                    >
+                      <div className="px-3 py-2">
+                        <div className="font-medium truncate" title={ev.title}>{ev.title}</div>
+                        <div className="text-xs opacity-90 whitespace-nowrap">
+                          {formatRange(ev.startTime, ev.endTime)}
+                          {durationText ? ` • ${durationText}` : ""}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

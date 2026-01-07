@@ -14,8 +14,6 @@ function dayLabel(offset: number): string {
 
 export default function TopBar() {
   // kept for future enhancement
-  const [active, setActive] = useState(0);
-  const offsets = [0, 1, 2, 3, 4, 5, 6];
 
   return (
     <div className="flex items-center justify-between">

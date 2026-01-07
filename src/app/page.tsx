@@ -35,6 +35,13 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     fetchData();
+
+    // Auto-refresh every 60 seconds
+    const interval = setInterval(() => {
+      fetchData();
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, [fetchData]);
 
   if (!mounted) {
