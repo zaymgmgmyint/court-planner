@@ -9,9 +9,13 @@ function toIsoRangeUtc(dateIso: string) {
 }
 
 function toHHMM(date: Date): string {
-  const h = String(date.getHours()).padStart(2, "0");
-  const m = String(date.getMinutes()).padStart(2, "0");
-  return `${h}:${m}`;
+  // Force time to be treated as Asia/Bangkok
+  return date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Bangkok",
+    hour12: false,
+  });
 }
 
 type GCalEvent = {

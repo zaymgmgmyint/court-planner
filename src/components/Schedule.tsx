@@ -74,8 +74,19 @@ export default function Schedule({ schedule }: Props) {
   return (
     <div className="w-full">
       <div className="rounded-xl border border-white/10 overflow-hidden bg-[#0d0f14]">
-        <div className="grid grid-cols-[96px_repeat(3,minmax(0,1fr))]">
-          <Header courts={courts} />
+        <div className="grid" style={{ gridTemplateColumns: "96px 1fr 1fr 1fr" }}>
+          {/* Header Row */}
+          <div className="h-12 flex items-center pl-4 text-sm text-white/60 bg-[#0f1218] border-b border-white/10">
+            Time
+          </div>
+          {courts.map((c) => (
+            <div
+              key={c.id}
+              className="h-12 flex items-center px-4 text-sm font-medium text-white bg-[#0f1218] border-b border-l border-white/10"
+            >
+              {c.name}
+            </div>
+          ))}
 
           {/* Time Column */}
           <div className="relative border-r border-white/5">
@@ -139,22 +150,6 @@ export default function Schedule({ schedule }: Props) {
   );
 }
 
-function Header({ courts }: { courts: { id: 1 | 2 | 3; name: string }[] }) {
-  return (
-    <>
-      <div className="h-12 flex items-center pl-4 text-sm text-white/60 bg-[#0f1218] border-b border-white/10">
-        Time
-      </div>
-      {courts.map((c) => (
-        <div
-          key={c.id}
-          className="h-12 flex items-center px-4 text-sm font-medium text-white bg-[#0f1218] border-b border-l border-white/10"
-        >
-          {c.name}
-        </div>
-      ))}
-    </>
-  );
-}
+
 
 
